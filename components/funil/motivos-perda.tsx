@@ -31,7 +31,6 @@ type RotuloProps = {
 }
 
 export function MotivosPerda({ dados, motivos }: Props) {
-  const ultimo = motivos[motivos.length - 1]
   const altura = Math.max(dados.length * 64 + 40, 160)
 
   return (
@@ -86,7 +85,7 @@ export function MotivosPerda({ dados, motivos }: Props) {
                   dataKey="origem"
                   width={108}
                   tickMargin={4}
-                  tick={{ fontSize: 12, fill: '#171717' }}
+                  tick={{ fontSize: 12, fill: '#171717', fontWeight: 500 }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -95,6 +94,8 @@ export function MotivosPerda({ dados, motivos }: Props) {
                   formatter={(valor) => fmt(Number(valor))}
                   contentStyle={{
                     fontSize: 12,
+                    backgroundColor: '#FFFFFF',
+                    color: '#171717',
                     borderRadius: 6,
                     border: '1px solid #E5E5E5',
                     boxShadow: 'none',
@@ -108,13 +109,17 @@ export function MotivosPerda({ dados, motivos }: Props) {
                     fill={MOTIVO_COR[motivo] ?? '#A3A3A3'}
                     isAnimationActive={false}
                   >
-                    {motivo === ultimo && (
+                    {(
                       <LabelList
                         content={(props: RotuloProps) => {
                           const x = Number(props.x ?? 0) + Number(props.width ?? 0)
                           const y = Number(props.y ?? 0) + Number(props.height ?? 0) / 2
                           const linha = dados[props.index ?? -1]
                           if (!linha) return null
+                          const ultimoComValor = [...motivos]
+                            .reverse()
+                            .find((m) => Number(linha[m] ?? 0) > 0)
+                          if (motivo !== ultimoComValor) return null
                           return (
                             <text
                               x={x + 6}
