@@ -5,7 +5,6 @@ import useSWR from 'swr'
 import {
   PERIODOS,
   fmt,
-  fmtDataCompleta,
   fmtDia,
   listarDias,
   mediaEstrelas,
@@ -140,22 +139,10 @@ export function Painel() {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-10">
-      <header className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-balance">
-            Funil de leads por origem
-          </h1>
-          <span className="rounded border border-border px-2 py-0.5 text-xs text-muted-foreground">
-            Dados simulados, conta de teste do Pipedrive
-          </span>
-        </div>
-        {data && (
-          <p className="text-sm text-muted-foreground">
-            {data.fonte === 'pipedrive'
-              ? `Pipedrive ao vivo, atualizado em ${fmtDataCompleta(data.atualizado_em)}`
-              : `Cópia dos dados de ${fmtDataCompleta(data.atualizado_em)}`}
-          </p>
-        )}
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-balance">
+          Funil de leads por origem
+        </h1>
       </header>
 
       {isLoading && (
@@ -215,6 +202,12 @@ export function Painel() {
           <MotivosPerda dados={calculos.linhasMotivos} motivos={calculos.motivos} />
         </>
       )}
+
+      <footer className="border-t border-border pt-4">
+        <p className="text-xs text-muted-foreground">
+          Dados fictícios a fim de preservar as informações originais da empresa
+        </p>
+      </footer>
     </main>
   )
 }
