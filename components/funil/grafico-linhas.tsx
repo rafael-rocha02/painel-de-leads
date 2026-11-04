@@ -79,8 +79,6 @@ export function GraficoLinhas({
               formatter={(valor) => formatar(Number(valor))}
               contentStyle={{
                 fontSize: 12,
-                backgroundColor: '#FFFFFF',
-                color: '#171717',
                 borderRadius: 6,
                 border: '1px solid #E5E5E5',
                 boxShadow: 'none',
@@ -89,7 +87,7 @@ export function GraficoLinhas({
             {origens.map((origem) => (
               <Line
                 key={origem}
-                type="linear"
+                type="monotone"
                 dataKey={origem}
                 stroke={ORIGEM_COR[origem]}
                 strokeWidth={2}
