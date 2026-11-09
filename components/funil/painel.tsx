@@ -18,6 +18,7 @@ import {
 import { Filtros } from './filtros'
 import { Indicadores } from './indicadores'
 import { GraficoLinhas } from './grafico-linhas'
+import { PergunteAosDados } from './pergunte-aos-dados'
 import { TabelaOrigens, type LinhaOrigem } from './tabela-origens'
 import { MotivosPerda, type LinhaMotivos } from './motivos-perda'
 
@@ -177,6 +178,8 @@ export function Painel() {
             anterior={calculos.totalAnterior}
             dias={periodo}
           />
+
+          <PergunteAosDados periodo={periodo} origens={origensAtivas} />
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <GraficoLinhas
