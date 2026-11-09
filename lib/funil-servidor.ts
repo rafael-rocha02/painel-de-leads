@@ -2,6 +2,7 @@ import snapshot from '@/data/snapshot-funil.json'
 import type { FunilData, MotivoItem, SerieItem } from '@/lib/funil'
 
 const REVALIDAR_SEGUNDOS = 3600
+const TIMEOUT_PIPEDRIVE_MS = 5000
 
 const CAMPO_DATA = '79ef76eaf31f801f533e773a786cc9c60c57b97b'
 const CAMPO_ESTRELAS = 'f203d474df1cb565941e2b4f29d57f96b839aab9'
@@ -37,27 +38,56 @@ function valorCampo(campo: unknown): unknown {
   return campo
 }
 
+async function buscarPagina(url: URL, token: string): Promise<Pagina> {
+  const controlador = new AbortController()
+  const temporizador = setTimeout(() => controlador.abort(), TIMEOUT_PIPEDRIVE_MS)
+
+  try {
+    const resposta = await fetch(url, {
+      headers: { 'x-api-token': token },
+      signal: controlador.signal,
+      next: { revalidate: REVALIDAR_SEGUNDOS },
+    })
+    if (resposta.status < 200 || resposta.status > 299)
+      throw new Error(`status ${resposta.status}`)
+
+    let corpo: Pagina & { success?: boolean }
+    try {
+      corpo = await resposta.json()
+    } catch (erro) {
+      if (controlador.signal.aborted) throw erro
+      throw new Error('resposta não é JSON válido')
+    }
+    if (!corpo || typeof corpo !== 'object') throw new Error('resposta vazia')
+    if (corpo.success === false) throw new Error('success: false')
+    if (!Array.isArray(corpo.data)) throw new Error('resposta sem o array data')
+    return corpo
+  } catch (erro) {
+    if (controlador.signal.aborted)
+      throw new Error(`tempo esgotado (${TIMEOUT_PIPEDRIVE_MS / 1000}s)`)
+    throw erro
+  } finally {
+    clearTimeout(temporizador)
+  }
+}
+
 async function buscarNegocios(dominio: string, token: string) {
   const negocios: Deal[] = []
   let cursor: string | null = null
 
   for (let i = 0; i < MAX_PAGINAS; i++) {
-    const url = new URL(`https://${dominio}.pipedrive.com/api/v2/deals`)
+    const url = new URL(
+      `https://${encodeURIComponent(dominio)}.pipedrive.com/api/v2/deals`,
+    )
     url.searchParams.set('limit', '500')
     if (cursor) url.searchParams.set('cursor', cursor)
 
-    const resposta = await fetch(url, {
-      headers: { 'x-api-token': token },
-      next: { revalidate: REVALIDAR_SEGUNDOS },
-    })
-    if (!resposta.ok) throw new Error(`Pipedrive respondeu ${resposta.status}`)
-
-    const pagina = (await resposta.json()) as Pagina
+    const pagina = await buscarPagina(url, token)
     negocios.push(...(pagina.data ?? []))
     cursor = pagina.additional_data?.next_cursor ?? null
-    if (!cursor) break
+    if (!cursor) return negocios
   }
-  return negocios
+  throw new Error(`mais de ${MAX_PAGINAS} páginas`)
 }
 
 function agregar(negocios: Deal[]): Pick<FunilData, 'serie' | 'motivos'> {
@@ -111,20 +141,36 @@ export function dadosDeReserva(): FunilData {
   return { ...(snapshot as FunilData), fonte: 'copia' }
 }
 
-export async function obterDadosFunil(): Promise<FunilData> {
-  const dominio = process.env.PIPEDRIVE_DOMAIN
-  const token = process.env.PIPEDRIVE_API_TOKEN
-  if (!dominio || !token) return dadosDeReserva()
+function registrarFalha(motivo: unknown) {
+  const texto = motivo instanceof Error ? motivo.message : String(motivo)
+  console.error(`[funil] Pipedrive indisponível, usando o snapshot: ${texto.slice(0, 120)}`)
+}
 
+export async function obterDadosFunil(): Promise<FunilData> {
   try {
+    const dominio = process.env.PIPEDRIVE_DOMAIN
+    const token = process.env.PIPEDRIVE_API_TOKEN
+    if (!dominio || !token) {
+      registrarFalha('PIPEDRIVE_DOMAIN ou PIPEDRIVE_API_TOKEN ausentes')
+      return dadosDeReserva()
+    }
+
     const negocios = await buscarNegocios(dominio, token)
+    const agregado = agregar(negocios)
+    const totalLeads = agregado.serie.reduce((soma, s) => soma + s.leads, 0)
+    if (totalLeads === 0) {
+      registrarFalha('nenhum lead com os campos personalizados preenchidos')
+      return dadosDeReserva()
+    }
+
     return {
       atualizado_em: new Date().toISOString().slice(0, 10),
       fonte: 'pipedrive',
       origens: Object.values(ORIGENS),
-      ...agregar(negocios),
+      ...agregado,
     }
-  } catch {
+  } catch (erro) {
+    registrarFalha(erro)
     return dadosDeReserva()
   }
 }
