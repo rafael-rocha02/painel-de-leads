@@ -142,7 +142,7 @@ export function Painel() {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-10">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-balance">
-          Funil de leads por origem
+          Painel de leads
         </h1>
       </header>
 
