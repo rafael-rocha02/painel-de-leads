@@ -4,7 +4,7 @@ Dashboard funcional e publicado, onde o marketing acompanha ao longo do tempo a 
 
 **Painel no ar:** https://funil-de-leads-five.vercel.app
 
-Complementa o [agente de leads](https://github.com/rafael-rocha02/agente-de-leads): o agente manda o resumo de cada dia no Slack, e o painel mostra a evolução ao longo das semanas. Os dados são fictícios.
+Construí este painel na VExpenses como complemento ao [agente de leads](https://github.com/rafael-rocha02/agente-de-leads): o agente manda o resumo de cada dia no Slack, e o painel mostra a evolução ao longo das semanas. Esta é uma recriação publicada com dados fictícios.
 
 ## O que o painel permite
 
