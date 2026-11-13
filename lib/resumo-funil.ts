@@ -1,5 +1,4 @@
 import {
-  VOLUME_BAIXO,
   mediaEstrelas,
   pctPerdidos,
   somar,
@@ -8,8 +7,15 @@ import {
   type Totais,
 } from '@/lib/funil'
 
+// Abaixo disso, a IA avisa que o volume é baixo para uma conclusão firme.
+// É mais alto que o aviso da tabela, porque recomendar uma origem exige mais base.
+const POUCOS_LEADS_PARA_CONCLUIR = 30
+
 const arredondar = (valor: number | null, casas: number) =>
   valor === null ? null : Number(valor.toFixed(casas))
+
+const pct = (parte: number, todo: number) =>
+  todo > 0 ? arredondar((parte / todo) * 100, 1) : null
 
 function indicadores(t: Totais) {
   return {
@@ -17,6 +23,7 @@ function indicadores(t: Totais) {
     media_estrelas: arredondar(mediaEstrelas(t), 2),
     pct_perdidos: arredondar(pctPerdidos(t), 1),
     reunioes: t.reunioes,
+    taxa_reuniao_pct: pct(t.reunioes, t.leads),
   }
 }
 
@@ -38,6 +45,11 @@ export function montarResumo(
   const noPeriodo = (dia: string) => dia >= inicio && dia <= fim
   const noAnterior = (dia: string) => dia >= inicioAnterior && dia <= fimAnterior
 
+  const selecionada = (o: string) => origens.includes(o)
+  const totalAtual = somar(
+    dados.serie.filter((s) => selecionada(s.origem) && noPeriodo(s.dia)),
+  )
+
   const porOrigem = origens.map((origem) => {
     const atual = somar(
       dados.serie.filter((s) => s.origem === origem && noPeriodo(s.dia)),
@@ -56,17 +68,15 @@ export function montarResumo(
       origem,
       ...indicadores(atual),
       periodo_anterior: anterior ? indicadores(anterior) : null,
-      volume_baixo: atual.leads < VOLUME_BAIXO,
+      participacao_leads_pct: pct(atual.leads, totalAtual.leads),
+      participacao_reunioes_pct: pct(atual.reunioes, totalAtual.reunioes),
+      poucos_leads: atual.leads < POUCOS_LEADS_PARA_CONCLUIR,
       motivos_perda: [...motivos.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([motivo, qtd]) => ({ motivo, qtd })),
     }
   })
 
-  const selecionada = (o: string) => origens.includes(o)
-  const totalAtual = somar(
-    dados.serie.filter((s) => selecionada(s.origem) && noPeriodo(s.dia)),
-  )
   const totalAnterior = temAnterior
     ? somar(dados.serie.filter((s) => selecionada(s.origem) && noAnterior(s.dia)))
     : null
