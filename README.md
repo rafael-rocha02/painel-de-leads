@@ -2,7 +2,7 @@
 
 Dashboard funcional e publicado, onde o marketing acompanha ao longo do tempo a qualidade dos leads de cada origem e pode fazer perguntas sobre os dados, com respostas do Gemini baseadas nos números do período escolhido.
 
-**Painel no ar:** https://funil-de-leads-five.vercel.app
+**Painel no ar:** https://painel-de-leads-rafael.vercel.app
 
 Construí este painel na VExpenses como complemento ao [agente de leads](https://github.com/rafael-rocha02/agente-de-leads): o agente manda o resumo de cada dia no Slack, e o painel mostra a evolução ao longo das semanas. Esta é uma recriação publicada com dados fictícios.
 
