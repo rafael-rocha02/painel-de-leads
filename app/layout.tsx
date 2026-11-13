@@ -6,7 +6,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  title: 'Funil de leads por origem',
+  title: 'Painel de leads',
   description:
     'Painel do time de marketing: volume, qualidade e perdas de leads por origem.',
 }
